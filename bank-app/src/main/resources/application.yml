@@ -1,14 +1,14 @@
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/bankdb
-    username: postgre
+    username: postgres
     password: 110755
   jpa:
     hibernate:
       ddl-auto: validate
     show-sql: true
   flyway:
-    enabled: true
+    enabled: false
     locations: classpath:db/migration
 
 server:
