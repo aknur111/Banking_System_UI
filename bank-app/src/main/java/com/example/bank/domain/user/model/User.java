@@ -23,14 +23,15 @@ public class User {
     @Column(unique = true, length = 255)
     private String password;
 
-    @Column(nullable = false)
+    @Column(name = "enables", nullable = false)
     private boolean enabled = true;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
-            inverseForeignKey = @JoinColumn(name = "role_id")
+            inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
+
 }

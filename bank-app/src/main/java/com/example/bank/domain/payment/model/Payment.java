@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "accounts")
+@Table(name = "payments")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -42,7 +42,7 @@ public class Payment {
     @Column(name = "provider_name", length = 255)
     private String providerName;
 
-   @Column(columnDefinition = "jsondb")
+   @Column(columnDefinition = "jsonb")
     private String details;
 
     @Column(nullable = false, precision = 19, scale = 2)
