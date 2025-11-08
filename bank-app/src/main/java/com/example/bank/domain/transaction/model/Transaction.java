@@ -30,6 +30,9 @@ public class Transaction {
     private Card relatedCard;
 
     @Column(nullable = false, length = 30)
+    private String type;
+
+    @Column(nullable = false, length = 30)
     private String status;
 
     @Column(nullable = false, precision = 19, scale = 2)
@@ -44,11 +47,22 @@ public class Transaction {
     private String description;
 
     @Column(columnDefinition = "jsonb")
+    private String meta;
+
+    @Column(nullable = false)
     private boolean suspicious;
 
-    @Column(name = "suspiciousReason")
+    @Column(name = "suspicious_reason")
     private String suspiciousReason;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
+
+
+    @PrePersist
+    public void prePersist() {
+        if (createdAt == null) {
+            createdAt = OffsetDateTime.now();
+        }
+    }
 }
