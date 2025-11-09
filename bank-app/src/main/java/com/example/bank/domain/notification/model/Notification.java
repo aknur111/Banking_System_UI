@@ -43,4 +43,11 @@ public class Notification {
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
+
+    @PrePersist
+    void prePersist() {
+        if(createdAt == null) {
+            createdAt = OffsetDateTime.now();
+        }
+    }
 }
