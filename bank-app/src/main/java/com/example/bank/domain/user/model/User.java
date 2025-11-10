@@ -23,6 +23,9 @@ public class User {
     @Column(unique = true, length = 255)
     private String password;
 
+    @Column(unique = true)
+    private String email;
+
     @Column(name = "enables", nullable = false)
     private boolean enabled = true;
 
