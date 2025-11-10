@@ -1,15 +1,17 @@
 package com.example.bank.api.rest;
 
 import com.example.bank.domain.user.model.User;
+import com.example.bank.domain.user.service.AuthService;
 import com.example.bank.security.JwtTokenProvider;
 import com.example.bank.security.dto.AuthRequest;
 import com.example.bank.security.dto.AuthResponse;
 import com.example.bank.security.dto.RegisterRequest;
-import com.example.bank.security.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import com.example.bank.domain.user.service.AuthService;
+
 
 @RestController
 @RequestMapping("/api/auth")
@@ -20,7 +22,7 @@ public class AuthController {
     private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
         User user = authService.register(request);
         return ResponseEntity.ok("User created with id=" + user.getId());
     }
@@ -32,3 +34,4 @@ public class AuthController {
         return ResponseEntity.ok(new AuthResponse(token));
     }
 }
+

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Freedom Bank – Вход</title>
+    <link rel="stylesheet" href="/assets/css/base.css">
+    <link rel="stylesheet" href="/assets/css/components.css">
+</head>
+<body style="display:flex;align-items:center;justify-content:center;height:100vh;">
+<div class="card" style="max-width:440px;width:100%;">
+    <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;">
+        <div class="sidebar__logo">FB</div>
+        <div>
+            <h1 class="page-title" style="margin-bottom:0;">Freedom Bank</h1>
+            <div class="page-subtitle">Вход в интернет-банк</div>
+        </div>
+    </div>
+
+    <form id="loginForm">
+        <div class="form-group">
+            <label class="label">Логин</label>
+            <input class="input" id="loginUsername">
+        </div>
+        <div class="form-group">
+            <label class="label">Пароль</label>
+            <input class="input" id="loginPassword" type="password">
+        </div>
+        <button class="btn btn--primary" type="submit" style="width:100%;justify-content:center;margin-top:0.5rem;">
+            Войти
+        </button>
+    </form>
+
+    <hr style="border:none;border-top:1px solid var(--border-subtle);margin:1.1rem 0;">
+
+    <form id="registerForm">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="label">ФИО</label>
+                <input class="input" id="regFullName">
+            </div>
+            <div class="form-group">
+                <label class="label">Телефон</label>
+                <input class="input" id="regPhone">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="label">Логин</label>
+                <input class="input" id="regUsername">
+            </div>
+            <div class="form-group">
+                <label class="label">Пароль</label>
+                <input class="input" id="regPassword" type="password">
+            </div>
+        </div>
+        <button class="btn btn--ghost" type="submit" style="width:100%;justify-content:center;margin-top:0.5rem;">
+            Зарегистрироваться
+        </button>
+    </form>
+</div>
+
+<div id="toastContainer" class="hidden"></div>
+
+<script type="module" src="/assets/js/pages/indexPage.js"></script>
+</body>
+</html>

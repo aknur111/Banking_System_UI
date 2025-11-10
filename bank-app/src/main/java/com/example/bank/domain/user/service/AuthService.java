@@ -5,12 +5,12 @@ import com.example.bank.domain.user.model.User;
 import com.example.bank.domain.user.repository.RoleRepository;
 import com.example.bank.domain.user.repository.UserRepository;
 import com.example.bank.security.dto.AuthRequest;
-import com.example.bank.security.dto.AuthResponse;
 import com.example.bank.security.dto.RegisterRequest;
-import com.example.bank.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,17 +24,16 @@ public class AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final AuthenticationManager authenticationManager;
 
     @Transactional
-    public void register(RegisterRequest request) {
-
+    public User register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new IllegalStateException("User already exists");
+            throw new IllegalArgumentException("Username already taken: " + request.getUsername());
         }
 
         Role userRole = roleRepository.findByName("ROLE_USER")
-                .orElseThrow(() -> new IllegalStateException("ROLE_USER not found"));
+                .orElseThrow(() -> new IllegalStateException("ROLE_USER not found in DB"));
 
         User user = User.builder()
                 .username(request.getUsername())
@@ -43,27 +42,19 @@ public class AuthService {
                 .roles(Set.of(userRole))
                 .build();
 
-        userRepository.save(user);
+        user = userRepository.save(user);
+
+        return user;
     }
 
-    public AuthResponse login(AuthRequest request) {
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
-
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new BadCredentialsException("Invalid username or password");
-        }
-
-        var authorities = user.getRoles().stream()
-                .map(Role::getName)
-                .map(SimpleGrantedAuthority::new)
-                .toList();
-
-        String token = jwtTokenProvider.generateToken(
-                new org.springframework.security.authentication.
-                        UsernamePasswordAuthenticationToken(user.getUsername(), null, authorities)
+    public Authentication authenticate(AuthRequest request) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getUsername(),
+                        request.getPassword()
+                )
         );
-
-        return new AuthResponse(token);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        return authentication;
     }
 }

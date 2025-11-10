@@ -17,13 +17,11 @@ public class UserService {
     private final UserRepository userRepository;
 
     public User getById(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User not found: " + id));
+        return userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found: " + id));
     }
 
     public User getByUsername(String username) {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("User not found: " + username));
+        return userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User not found: " + username));
     }
 
     public List<User> getAll() {

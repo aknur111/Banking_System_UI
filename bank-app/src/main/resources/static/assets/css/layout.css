@@ -1,0 +1,139 @@
+.app-shell {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    height: 100vh;
+}
+
+/* sidebar */
+
+.sidebar {
+    background: linear-gradient(180deg, #050b10 0, #050b10 40%, #020305 100%);
+    border-right: 1px solid var(--border-subtle);
+    padding: 1.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 2rem;
+}
+
+.sidebar__logo {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: radial-gradient(circle at 30% 20%, #00ffc3, #00c853);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #020305;
+    font-weight: 700;
+    font-size: 1.05rem;
+    box-shadow: 0 0 0 2px rgba(0, 200, 83, 0.25);
+}
+
+.sidebar__name {
+    font-size: 1.1rem;
+}
+
+.sidebar__badge {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.sidebar__nav {
+    flex: 1;
+}
+
+.sidebar__section-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    margin: 1.3rem 0 0.4rem;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+}
+
+.sidebar__link {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: 999px;
+    color: var(--text-muted);
+    transition: background 0.16s ease, color 0.16s ease, transform 0.1s ease;
+    font-size: 0.9rem;
+}
+
+.sidebar__link span.icon {
+    width: 18px;
+    text-align: center;
+    opacity: 0.9;
+}
+
+.sidebar__link:hover {
+    background: rgba(255, 255, 255, 0.03);
+    color: #e8f5e9;
+    transform: translateX(2px);
+}
+
+.sidebar__link--active {
+    background: var(--accent-soft);
+    color: #e8f5e9;
+}
+
+.sidebar__footer {
+    margin-top: 1.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* main */
+
+.main {
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem 1.75rem;
+}
+
+.main__topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+}
+
+.main__search {
+    max-width: 280px;
+    width: 100%;
+}
+
+.main__content {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 1.25rem;
+}
+
+.grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.grid--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 960px) {
+    .app-shell {
+        grid-template-columns: 1fr;
+    }
+    .sidebar {
+        display: none;
+    }
+}

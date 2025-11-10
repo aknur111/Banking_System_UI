@@ -1,0 +1,30 @@
+<div class="main__content">
+    <h1 class="page-title">Бонусы</h1>
+    <div class="page-subtitle">Кешбэк и бонусный счёт</div>
+
+    <section class="grid grid--2">
+        <div class="card">
+            <div class="card__title">Баланс бонусного счёта</div>
+            <div class="card__main" id="bonusBalance">0 ₸</div>
+        </div>
+        <div class="card card--soft">
+            <div class="card__title">Правила кешбэка</div>
+            <div id="cashbackRules"></div>
+        </div>
+    </section>
+
+    <section class="card card--soft" style="margin-top:1rem;">
+        <div class="card__title">История бонусов</div>
+        <table class="table" id="bonusTxTable">
+            <thead>
+            <tr>
+                <th>Дата</th>
+                <th>Операция</th>
+                <th>Сумма</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+</div>
+<script type="module" src="/assets/js/pages/bonusesPage.js"></script>
