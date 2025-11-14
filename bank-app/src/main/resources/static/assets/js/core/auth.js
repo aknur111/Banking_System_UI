@@ -1,24 +1,22 @@
-import {httpClient, setToken, clearToken, getToken} from './httpClient.js';
+// /assets/js/core/auth.js
+import { getToken, setToken, clearToken } from './httpClient.js';
 
-export async function login(username, password) {
-    const data = await httpClient.post('/auth/login', { username, password });
-    if (data.token) {
-        setToken(data.token);
-    }
-    return data;
+export function requireAuth() {
+  const token = getToken();
+  if (!token && window.location.pathname !== '/index.html') {
+    window.location.replace('/index.html');
+    return false;
+  }
+  return true;
 }
 
-export async function register(payload) {
-    return httpClient.post('/auth/register', payload);
+export async function loginSuccess(token) {
+  setToken(token, true);
+  // важно: replace, чтобы кнопка back не возвращала на index и не запускала скрипты логина заново
+  window.location.replace('/dashboard.html');
 }
 
 export function logout() {
-    clearToken();
-    window.location.href = '/index.html';
-}
-
-export function requireAuth() {
-    if (!getToken()) {
-        window.location.href = '/index.html';
-    }
+  clearToken();
+  window.location.replace('/index.html');
 }

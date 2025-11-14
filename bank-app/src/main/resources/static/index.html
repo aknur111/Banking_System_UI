@@ -1,32 +1,33 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8"/>
-    <title>Freedom Bank – Вход</title>
+    <title>Freedom Bank — Sign in</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <link rel="stylesheet" href="/assets/css/base.css">
     <link rel="stylesheet" href="/assets/css/components.css">
 </head>
-<body style="display:flex;align-items:center;justify-content:center;height:100vh;">
-<div class="card" style="max-width:440px;width:100%;">
-    <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;">
+<body style="display:flex;align-items:center;justify-content:center;min-height:100vh;">
+<div class="card" style="max-width:480px;width:100%;">
+    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;">
         <div class="sidebar__logo">FB</div>
         <div>
-            <h1 class="page-title" style="margin-bottom:0;">Freedom Bank</h1>
-            <div class="page-subtitle">Вход в интернет-банк</div>
+            <h1 class="page-title" style="margin:0;">Freedom Bank</h1>
+            <div class="page-subtitle">Internet banking</div>
         </div>
     </div>
 
     <form id="loginForm">
         <div class="form-group">
-            <label class="label">Логин</label>
-            <input class="input" id="loginUsername">
+            <label class="label">Username</label>
+            <input class="input" id="loginUsername" autocomplete="username">
         </div>
         <div class="form-group">
-            <label class="label">Пароль</label>
-            <input class="input" id="loginPassword" type="password">
+            <label class="label">Password</label>
+            <input class="input" id="loginPassword" type="password" autocomplete="current-password">
         </div>
-        <button class="btn btn--primary" type="submit" style="width:100%;justify-content:center;margin-top:0.5rem;">
-            Войти
+        <button class="btn btn--primary" type="submit" style="width:100%;justify-content:center;margin-top:.25rem;">
+            Sign in
         </button>
     </form>
 
@@ -35,32 +36,33 @@
     <form id="registerForm">
         <div class="form-row">
             <div class="form-group">
-                <label class="label">ФИО</label>
-                <input class="input" id="regFullName">
+                <label class="label">Full name</label>
+                <input class="input" id="regFullName" autocomplete="name">
             </div>
             <div class="form-group">
-                <label class="label">Телефон</label>
-                <input class="input" id="regPhone">
+                <label class="label">Phone</label>
+                <input class="input" id="regPhone" autocomplete="tel">
             </div>
         </div>
+
         <div class="form-row">
             <div class="form-group">
-                <label class="label">Логин</label>
-                <input class="input" id="regUsername">
+                <label class="label">Username</label>
+                <input class="input" id="regUsername" autocomplete="username">
             </div>
             <div class="form-group">
-                <label class="label">Пароль</label>
-                <input class="input" id="regPassword" type="password">
+                <label class="label">Password</label>
+                <input class="input" id="regPassword" type="password" autocomplete="new-password">
             </div>
         </div>
-        <button class="btn btn--ghost" type="submit" style="width:100%;justify-content:center;margin-top:0.5rem;">
-            Зарегистрироваться
+
+        <button class="btn btn--ghost" type="submit" style="width:100%;justify-content:center;margin-top:.25rem;">
+            Create account
         </button>
     </form>
 </div>
 
 <div id="toastContainer" class="hidden"></div>
-
 <script type="module" src="/assets/js/pages/indexPage.js"></script>
 </body>
 </html>

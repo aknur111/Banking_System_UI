@@ -1,20 +1,48 @@
-<div class="main__content">
-    <h1 class="page-title">Транзакции</h1>
-    <div class="page-subtitle">Движения по вашим счетам и картам</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Freedom Bank — Transactions</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <link rel="stylesheet" href="/assets/css/base.css">
+    <link rel="stylesheet" href="/assets/css/components.css">
+    <link rel="stylesheet" href="/assets/css/layout.css">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="sidebar__brand"><div class="sidebar__logo">FB</div><div class="sidebar__brand-text"><div class="sidebar__title">Freedom Bank</div><div class="sidebar__subtitle">Internet bank</div></div></div>
+        <nav class="menu">
+            <div class="menu__section">Navigation</div>
+            <a class="menu__item" href="/dashboard.html">Dashboard</a>
+            <a class="menu__item" href="/cards.html">Cards</a>
+            <a class="menu__item" href="/credits.html">Credits</a>
+            <a class="menu__item" href="/deposits.html">Deposits</a>
+            <a class="menu__item" href="/payments.html">Payments</a>
+            <a class="menu__item menu__item--active" href="/transactions.html">Transactions</a>
+            <a class="menu__item" href="/bonuses.html">Bonuses</a>
+            <a class="menu__item" href="/profile.html">Profile</a>
+            <div class="menu__section">Actions</div>
+            <button id="logoutBtn" class="menu__item btn--link" type="button">Sign out</button>
+        </nav>
+    </aside>
 
-    <section class="card card--soft">
-        <table class="table" id="transactionsTable">
-            <thead>
-            <tr>
-                <th>Дата</th>
-                <th>Счёт</th>
-                <th>Описание</th>
-                <th>Сумма</th>
-                <th>Статус</th>
-            </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </section>
+    <main class="main">
+        <h1 class="page-title">Transactions</h1>
+        <div class="page-subtitle">Movements on your accounts and cards</div>
+
+        <section class="card card--soft">
+            <table class="table" id="transactionsTable">
+                <thead>
+                <tr><th>Date</th><th>Account</th><th>Description</th><th>Amount</th><th>Status</th></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+    </main>
 </div>
+
+<div id="toastContainer" class="hidden"></div>
 <script type="module" src="/assets/js/pages/transactionsPage.js"></script>
+</body>
+</html>
