@@ -6,18 +6,18 @@ import com.example.bank.domain.transaction.model.TransactionType;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class BonusTransactionDecorator implements TransactionProcessor{
+public class BonusTransactionDecorator implements TransactionProcessor {
+
     private final TransactionProcessor delegate;
 
     @Override
     public Transaction process(Transaction transaction) {
-        if(TransactionType.BONUS.equals(transaction.getType())) {
+        if (transaction.getType() == TransactionType.BONUS) {
             String desc = transaction.getDescription();
-            if(desc == null){
+            if (desc == null) {
                 desc = "";
             }
             transaction.setDescription("Bonus transaction: " + desc);
-
         }
         return delegate.process(transaction);
     }

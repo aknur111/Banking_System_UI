@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.security.auth.login.AccountNotFoundException;
 import java.math.BigDecimal;
 
 @Component
@@ -24,16 +23,15 @@ public class AccountPaymentChannel implements PaymentChannel {
     @Transactional
     public Transaction pay(BigDecimal amount, String currency, String description, Account fromAccount, Card fromCard) {
         if (fromAccount == null) {
-            throw new IllegalArgumentException("AccountPaymentChannel must not be null");
+            throw new IllegalArgumentException("Source account must not be null");
         }
 
-        if (amount.signum() <= 0) {
+        if (amount == null || amount.signum() <= 0) {
             throw new IllegalArgumentException("Amount must be greater than zero");
         }
 
-
-        if (fromAccount.getBalance().compareTo(amount) <0) {
-            throw new IllegalArgumentException("In account not enough balance" + fromAccount.getId());
+        if (fromAccount.getBalance().compareTo(amount) < 0) {
+            throw new IllegalArgumentException("Not enough balance on account " + fromAccount.getId());
         }
 
         fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
@@ -49,5 +47,4 @@ public class AccountPaymentChannel implements PaymentChannel {
                 fromCard
         );
     }
-
 }

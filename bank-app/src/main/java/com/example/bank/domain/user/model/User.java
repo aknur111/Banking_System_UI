@@ -1,7 +1,9 @@
 package com.example.bank.domain.user.model;
 
+import com.example.bank.domain.customer.model.CustomerProfile;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.util.Set;
 
 @Entity
@@ -11,8 +13,8 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -37,4 +39,7 @@ public class User {
     )
     private Set<Role> roles;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
+    private CustomerProfile customer;
 }

@@ -1,15 +1,15 @@
 package com.example.bank.api.rest;
 
 import com.example.bank.domain.customer.model.CustomerProfile;
-import com.example.bank.domain.customer.repository.CustomerProfileRepository;
 import com.example.bank.domain.payment.model.Payment;
 import com.example.bank.domain.payment.model.PaymentCategory;
 import com.example.bank.domain.payment.model.PaymentStatus;
 import com.example.bank.domain.payment.service.PaymentService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -17,144 +17,227 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/payments")
+@RequestMapping("/api/payments")
 @RequiredArgsConstructor
 public class PaymentController {
+
     private final PaymentService paymentService;
-    private final CustomerProfileRepository customerProfileRepository;
 
-    @PostMapping("/account/{accountId}/pay")
-    public ResponseEntity<Payment> payFromAccountNow(@PathVariable Long accountId, @RequestBody PaymentRequest request) {
-        PaymentCategory category = PaymentCategory.valueOf(request.getCategory().toUpperCase());
 
+    @PostMapping("/account/now")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<PaymentResponse> payFromAccountNow(
+            @RequestBody PayFromAccountRequest request
+    ) {
         Payment payment = paymentService.payFromAccountNow(
-                accountId,
+                request.getAccountId(),
                 request.getAmount(),
                 request.getCurrency(),
-                category,
+                request.getCategory(),
                 request.getProviderName(),
-                request.getDetailsJson()
+                request.getDetails()
         );
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(payment);
-    }
-
-    @PostMapping("/account/{accountId}/schedule")
-    public ResponseEntity<Payment> scheduleFromAccount(@PathVariable Long accountId, @RequestBody SchedulePaymentRequest request) {
-        PaymentCategory category = PaymentCategory.valueOf(request.getCategory().toUpperCase());
-        Payment payment = paymentService.scheduleFromAccount(
-                accountId,
-                request.getAmount(),
-                request.getCurrency(),
-                category,
-                request.getProviderName(),
-                request.getDetailsJson(),
-                request.getScheduledAt()
-        );
-        return ResponseEntity.status(HttpStatus.CREATED).body(payment);
+        return ResponseEntity.status(201).body(toResponse(payment));
     }
 
 
-    @PostMapping("/card/{cardId}/pay")
-    public ResponseEntity<Payment> payFromCardNow(
-            @PathVariable Long cardId,
-            @RequestBody PaymentRequest request
+    @PostMapping("/card/now")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<PaymentResponse> payFromCardNow(
+            @RequestBody PayFromCardRequest request
     ) {
-        PaymentCategory category = PaymentCategory.valueOf(request.getCategory().toUpperCase());
-
         Payment payment = paymentService.payFromCardNow(
-                cardId,
+                request.getCardId(),
                 request.getAmount(),
                 request.getCurrency(),
-                category,
+                request.getCategory(),
                 request.getProviderName(),
-                request.getDetailsJson()
+                request.getDetails()
         );
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(payment);
+        return ResponseEntity.status(201).body(toResponse(payment));
     }
 
 
-    @PostMapping("/card/{cardId}/schedule")
-    public ResponseEntity<Payment> scheduleFromCard(
-            @PathVariable Long cardId,
-            @RequestBody SchedulePaymentRequest request
+    @PostMapping("/account/schedule")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<PaymentResponse> scheduleFromAccount(
+            @RequestBody ScheduleFromAccountRequest request
     ) {
-        PaymentCategory category = PaymentCategory.valueOf(request.getCategory().toUpperCase());
-
-        Payment payment = paymentService.scheduleFromCard(
-                cardId,
+        Payment payment = paymentService.scheduleFromAccount(
+                request.getAccountId(),
                 request.getAmount(),
                 request.getCurrency(),
-                category,
+                request.getCategory(),
                 request.getProviderName(),
-                request.getDetailsJson(),
+                request.getDetails(),
                 request.getScheduledAt()
         );
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(payment);
+        return ResponseEntity.status(201).body(toResponse(payment));
     }
 
 
-
-    @PostMapping("/{paymentId}/execute")
-    public ResponseEntity<Payment> executeScheduled(@PathVariable Long paymentId) {
-        Payment payment = paymentService.executeScheduledPayment(paymentId);
-        return ResponseEntity.ok(payment);
+    @PostMapping("/card/schedule")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<PaymentResponse> scheduleFromCard(
+            @RequestBody ScheduleFromCardRequest request
+    ) {
+        Payment payment = paymentService.scheduleFromCard(
+                request.getCardId(),
+                request.getAmount(),
+                request.getCurrency(),
+                request.getCategory(),
+                request.getProviderName(),
+                request.getDetails(),
+                request.getScheduledAt()
+        );
+        return ResponseEntity.status(201).body(toResponse(payment));
     }
 
-    @PostMapping("/{paymentId}/cancel")
-    public ResponseEntity<Payment> cancelScheduled(@PathVariable Long paymentId) {
-        Payment payment = paymentService.cancelScheduledPayment(paymentId);
-        return ResponseEntity.ok(payment);
+
+    @PostMapping("/{id}/execute")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<PaymentResponse> executeScheduled(@PathVariable Long id) {
+        Payment payment = paymentService.executeScheduledPayment(id);
+        return ResponseEntity.ok(toResponse(payment));
     }
 
+
+    @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<PaymentResponse> cancelScheduled(@PathVariable Long id) {
+        Payment payment = paymentService.cancelScheduledPayment(id);
+        return ResponseEntity.ok(toResponse(payment));
+    }
 
 
     @GetMapping("/{id}")
-    public ResponseEntity<Payment> getPayment(@PathVariable Long id) {
-        return ResponseEntity.ok(paymentService.getPayment(id));
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<PaymentResponse> getPayment(@PathVariable Long id) {
+        Payment payment = paymentService.getPayment(id);
+        return ResponseEntity.ok(toResponse(payment));
     }
 
 
-    @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<Payment>> getCustomerPayments(@PathVariable Long customerId) {
-        CustomerProfile customer = customerProfileRepository.findById(customerId).orElseThrow(() -> new IllegalArgumentException("Customer not found " + customerId));
-        return ResponseEntity.ok(paymentService.getCustomerPayments(customer));
+    @GetMapping
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<List<PaymentResponse>> getCustomerPayments(
+            @AuthenticationPrincipal CustomerProfile customer,
+            @RequestParam(required = false) PaymentStatus status,
+            @RequestParam(required = false) PaymentCategory category
+    ) {
+        List<Payment> payments;
+
+        if (status != null) {
+            payments = paymentService.getCustomerPaymentsByStatus(customer, status);
+        } else {
+            payments = paymentService.getCustomerPayments(customer);
+        }
+
+        if (category != null) {
+            payments = payments.stream()
+                    .filter(p -> p.getCategory() == category)
+                    .toList();
+        }
+
+        List<PaymentResponse> responses = payments.stream()
+                .map(this::toResponse)
+                .toList();
+
+        return ResponseEntity.ok(responses);
     }
 
-    @GetMapping("/customer/{customerId}/status/{status}")
-    public ResponseEntity<List<Payment>> getCustomerPaymentByStatus(@PathVariable Long customerId, @PathVariable String status) {
-        CustomerProfile customer = customerProfileRepository.findById(customerId).orElseThrow(() -> new IllegalArgumentException("Customer not found " + customerId));
-        PaymentStatus paymentStatus = PaymentStatus.valueOf(status.toUpperCase());
-        return ResponseEntity.ok(paymentService.getCustomerPaymentsByStatus(customer, paymentStatus));
 
+    private PaymentResponse toResponse(Payment payment) {
+        PaymentResponse r = new PaymentResponse();
+        r.setId(payment.getId());
+        r.setAmount(payment.getAmount());
+        r.setCurrency(payment.getCurrency());
+        r.setCategory(payment.getCategory().name());
+        r.setStatus(payment.getStatus().name());
+        r.setProviderName(payment.getProviderName());
+        r.setDetails(payment.getDetails());
+        r.setCreatedAt(payment.getCreatedAt());
+        r.setPaidAt(payment.getPaidAt());
+        r.setScheduledAt(payment.getScheduledAt());
+
+        if (payment.getFromAccount() != null) {
+            r.setSourceType("ACCOUNT");
+            r.setSourceAccountId(payment.getFromAccount().getId());
+        } else if (payment.getFromCard() != null) {
+            r.setSourceType("CARD");
+            r.setSourceCardId(payment.getFromCard().getId());
+        } else {
+            r.setSourceType("UNKNOWN");
+        }
+
+        if (payment.getTransaction() != null) {
+            r.setTransactionId(payment.getTransaction().getId());
+        }
+
+        return r;
     }
-
-    @GetMapping("/category/{category}")
-    public ResponseEntity<List<Payment>> getPaymentsByCategory(@PathVariable String category) {
-        PaymentCategory cat = PaymentCategory.valueOf(category.toUpperCase());
-        return ResponseEntity.ok(paymentService.getPaymentsByCategory(cat));
-    }
-
 
 
     @Data
-    public static class SchedulePaymentRequest {
+    public static class PayFromAccountRequest {
+        private Long accountId;
         private BigDecimal amount;
         private String currency;
-        private String category;
+        private PaymentCategory category;
         private String providerName;
-        private String detailsJson;
+        private String details;
+    }
+
+    @Data
+    public static class PayFromCardRequest {
+        private Long cardId;
+        private BigDecimal amount;
+        private String currency;
+        private PaymentCategory category;
+        private String providerName;
+        private String details;
+    }
+
+    @Data
+    public static class ScheduleFromAccountRequest {
+        private Long accountId;
+        private BigDecimal amount;
+        private String currency;
+        private PaymentCategory category;
+        private String providerName;
+        private String details;
         private OffsetDateTime scheduledAt;
     }
 
     @Data
-    public static class PaymentRequest {
+    public static class ScheduleFromCardRequest {
+        private Long cardId;
+        private BigDecimal amount;
+        private String currency;
+        private PaymentCategory category;
+        private String providerName;
+        private String details;
+        private OffsetDateTime scheduledAt;
+    }
+
+    @Data
+    public static class PaymentResponse {
+        private Long id;
         private BigDecimal amount;
         private String currency;
         private String category;
+        private String status;
         private String providerName;
-        private String detailsJson;
+        private String details;
+
+        private String sourceType;
+        private Long sourceAccountId;
+        private Long sourceCardId;
+
+        private Long transactionId;
+
+        private OffsetDateTime createdAt;
+        private OffsetDateTime paidAt;
+        private OffsetDateTime scheduledAt;
     }
 }

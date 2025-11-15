@@ -23,31 +23,38 @@ import java.util.List;
 @Transactional
 @RequiredArgsConstructor
 public class TransactionService {
+
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
 
-
-    private TransactionProcessor buildProcessor(){
+    private TransactionProcessor buildProcessor() {
         TransactionProcessor basic = new BasicTransactionProcessor(transactionRepository);
-
         TransactionProcessor suspicious = new SuspiciousActivityDecorator(basic, new BigDecimal("100000"));
-
         TransactionProcessor cashback = new CashbackTransactionDecorator(suspicious);
-
         return new BonusTransactionDecorator(cashback);
     }
 
-    public Transaction createTransaction(Long accountId, TransactionType type, BigDecimal amount, String currency, String direction, String description, Card relatedCard){
-        if (amount == null || amount.signum() == 0){
-            throw new IllegalArgumentException("Amount must not be null or zero, and must be positive");
+    public Transaction createTransaction(
+            Long accountId,
+            TransactionType type,
+            BigDecimal amount,
+            String currency,
+            String direction,
+            String description,
+            Card relatedCard
+    ) {
+        if (amount == null || amount.signum() <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than zero");
         }
 
-        Account account = accountRepository.findById(accountId).orElseThrow(()-> new IllegalArgumentException("Account not found" + accountId));
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found: " + accountId));
+
         Transaction tx = Transaction.builder()
                 .account(account)
                 .relatedCard(relatedCard)
-                .type(type.name())
-                .status(TransactionStatus.COMPLETED.name())
+                .type(type)
+                .status(TransactionStatus.COMPLETED)
                 .amount(amount)
                 .currency(currency)
                 .direction(direction)
@@ -58,18 +65,51 @@ public class TransactionService {
         return buildProcessor().process(tx);
     }
 
-    @Transactional(readOnly = true)
-    public List<Transaction> getAccountTransactions(Long accountId){
-        Account account = accountRepository.findById(accountId).orElseThrow(()-> new IllegalArgumentException("Account not found" + accountId));
+    @Transactional
+    public Transaction depositToAccount(Long accountId,
+                                        BigDecimal amount,
+                                        String currency,
+                                        String description) {
 
+        if (amount == null || amount.signum() <= 0) {
+            throw new IllegalArgumentException("Amount must be positive");
+        }
+
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found " + accountId));
+
+        if (currency == null || currency.isBlank()) {
+            currency = account.getCurrency();
+        }
+
+        account.setBalance(account.getBalance().add(amount));
+        accountRepository.save(account);
+
+        return createTransaction(
+                account.getId(),
+                TransactionType.DEPOSIT,
+                amount,
+                currency,
+                "IN",
+                description,
+                null
+        );
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<Transaction> getAccountTransactions(Long accountId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found: " + accountId));
         return transactionRepository.findByAccountOrderByCreatedAtDesc(account);
     }
 
-    public Transaction getTransaction(Long id){
-        return transactionRepository.findById(id).orElseThrow(()-> new IllegalArgumentException("Transaction not found" + id));
+    public Transaction getTransaction(Long id) {
+        return transactionRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Transaction not found: " + id));
     }
 
-    public Transaction markAsSuspicious(Long id, String reason){
+    public Transaction markAsSuspicious(Long id, String reason) {
         Transaction tx = getTransaction(id);
         tx.setSuspicious(true);
         tx.setSuspiciousReason(reason);

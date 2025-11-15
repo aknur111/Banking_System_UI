@@ -1,4 +1,4 @@
-package  com.example.bank.domain.transaction.model;
+package com.example.bank.domain.transaction.model;
 
 import com.example.bank.domain.account.model.Account;
 import com.example.bank.domain.card.model.Card;
@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 
 @Entity
@@ -17,23 +18,27 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 @Builder
 public class Transaction {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "account_id")
+    @JsonIgnore
     private Account account;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "related_card_id")
     private Card relatedCard;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private String type;
+    private TransactionType type;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private String status;
+    private TransactionStatus status;
 
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
@@ -46,7 +51,7 @@ public class Transaction {
 
     private String description;
 
-    @Column(columnDefinition = "jsonb")
+    @Column
     private String meta;
 
     @Column(nullable = false)
@@ -57,7 +62,6 @@ public class Transaction {
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
-
 
     @PrePersist
     public void prePersist() {

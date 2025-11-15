@@ -2,8 +2,8 @@ package com.example.bank.domain.payment.model;
 
 import com.example.bank.domain.account.model.Account;
 import com.example.bank.domain.card.model.Card;
-import com.example.bank.domain.transaction.model.Transaction;
 import com.example.bank.domain.customer.model.CustomerProfile;
+import com.example.bank.domain.transaction.model.Transaction;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,8 +17,8 @@ import java.time.OffsetDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-
 public class Payment {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,14 +35,14 @@ public class Payment {
     @JoinColumn(name = "from_card_id")
     private Card fromCard;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private String category;
-
+    private PaymentCategory category;
 
     @Column(name = "provider_name", length = 255)
     private String providerName;
 
-    @Column(columnDefinition = "jsonb")
+    @Column
     private String details;
 
     @Column(nullable = false, precision = 19, scale = 2)
@@ -51,8 +51,9 @@ public class Payment {
     @Column(nullable = false, length = 20)
     private String currency;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String status;
+    private PaymentStatus status;
 
     @Column(name = "scheduled_at")
     private OffsetDateTime scheduledAt;

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.OffsetDateTime;
+import java.time.YearMonth;
 
 @Entity
 @Table(name = "cards")
@@ -35,14 +36,38 @@ public class Card {
     @Column(nullable = false, length = 3)
     private String cvv;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String status;
+    private CardStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private CardType type;   // 👉 новое поле
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
     @PrePersist
     void prePersist() {
-        if (createdAt == null) createdAt = OffsetDateTime.now();
+        if (createdAt == null) {
+            createdAt = OffsetDateTime.now();
+        }
+        if (status == null) {
+            status = CardStatus.ACTIVE;
+        }
+        if (type == null) {
+            type = CardType.DEBIT;
+        }
+    }
+
+    public void updateStatusIfExpired() {
+        YearMonth exp = YearMonth.of(expiryYear, expiryMonth);
+        YearMonth now = YearMonth.now();
+
+        if (status != CardStatus.BLOCKED && status != CardStatus.INACTIVE) {
+            if (now.isAfter(exp)) {
+                this.status = CardStatus.EXPIRED;
+            }
+        }
     }
 }

@@ -12,3 +12,12 @@ CREATE TABLE role_permissions (
     CONSTRAINT fk_role_permissions_permission
         FOREIGN KEY (permission_id) REFERENCES permissions (id)
 );
+ALTER TABLE users
+ADD COLUMN customer_id bigint;
+
+ALTER TABLE users
+ADD CONSTRAINT fk_users_customer
+FOREIGN KEY (customer_id) REFERENCES customers(id);
+
+ALTER TABLE cards
+    ADD COLUMN type varchar(20) NOT NULL DEFAULT 'DEBIT';
