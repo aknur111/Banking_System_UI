@@ -35,10 +35,12 @@
         .table thead{background:rgba(15,23,42,.9)}
         .badge{font-size:.72rem;padding:2px 8px;border-radius:999px;border:1px solid transparent}
         .badge--success{background:rgba(22,163,74,.18);border-color:rgba(34,197,94,.5);color:#bbf7d0}
+        .badge--muted{background:rgba(30,64,175,.14);border-color:rgba(129,140,248,.55);color:#c7d2fe}
+        .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(148,163,184,.22);background:transparent;border-radius:999px;padding:8px 12px;font-size:.86rem;cursor:pointer;transition:transform .1s ease,border-color .18s ease}
+        .btn:hover{transform:translateY(-1px);border-color:rgba(148,163,184,.38)}
+        .btn--primary{background:linear-gradient(90deg,#22c55e,#16a34a);border-color:transparent;color:#020617;font-weight:600}
         .footer{margin-top:auto;font-size:.78rem;opacity:.55}
-        .btn-ghost{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(148,163,184,.22);background:transparent;border-radius:999px;padding:8px 12px;font-size:.86rem;cursor:pointer;transition:transform .1s ease,border-color .18s ease}
-        .btn-ghost:hover{transform:translateY(-1px);border-color:rgba(148,163,184,.38)}
-        @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.0)}50%{box-shadow:0 0 0 10px rgba(34,197,94,.08)}}
+        @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}50%{box-shadow:0 0 0 10px rgba(34,197,94,.08)}}
         @media(max-width:960px){.app-shell{grid-template-columns:1fr}.sidebar{flex-direction:row;gap:16px;overflow-x:auto}.footer{display:none}}
     </style>
 </head>
@@ -107,8 +109,11 @@
         <div>
             <div class="nav-title">Actions</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <a class="btn-ghost" href="profile.html">Profile</a>
-                <button id="logoutBtn" class="btn-ghost"><svg class="nav-icon"><use href="#ic-logout"/></svg><span>Sign out</span></button>
+                <a class="btn" href="profile.html">Profile</a>
+                <button id="logoutBtn" class="btn" type="button">
+                    <svg class="nav-icon"><use href="#ic-logout"/></svg>
+                    <span>Sign out</span>
+                </button>
             </div>
         </div>
 
@@ -121,6 +126,7 @@
                 <div class="page-title">Deposits</div>
                 <div class="page-subtitle">Savings accounts and interest</div>
             </div>
+            <button id="refreshBtn" class="btn btn--primary" type="button">Refresh</button>
         </header>
 
         <section class="card">
@@ -142,42 +148,6 @@
 </div>
 
 <div id="toastContainer" class="hidden"></div>
-
-<script type="module">
-    import {requireAuth, logout} from '/assets/js/core/auth.js';
-    import {bindLogout} from '/assets/js/core/ui.js';
-    import {depositApi} from '/assets/js/api/depositApi.js';
-
-    if (!requireAuth()) { window.location.href = '/index.html'; }
-
-    bindLogout('logoutBtn', logout);
-
-    document.querySelectorAll('.nav-list a').forEach(a=>{
-      if (a.getAttribute('href') && location.pathname.endsWith(a.getAttribute('href'))) {
-        a.closest('.nav-item')?.classList.add('nav-item--active');
-      }
-    });
-
-    const tbody = document.querySelector('#depositsTable tbody');
-    (async function init(){
-      try {
-        const rows = await depositApi.myDeposits();
-        tbody.innerHTML = '';
-        rows.forEach(d=>{
-          tbody.insertAdjacentHTML('beforeend', `
-            <tr>
-              <td>${d.id}</td>
-              <td>${d.accountId}</td>
-              <td>${Number(d.principalAmount).toLocaleString('en-US')} ${d.currency}</td>
-              <td>${d.monthlyInterest}%</td>
-              <td><span class="badge ${d.status==='ACTIVE'?'badge--success':''}">${d.status}</span></td>
-            </tr>
-          `);
-        });
-      } catch(e) {
-        tbody.innerHTML = '';
-      }
-    })();
-</script>
+<script type="module" src="/assets/js/pages/depositsPage.js"></script>
 </body>
 </html>

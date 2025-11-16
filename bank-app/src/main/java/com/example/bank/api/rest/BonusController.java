@@ -21,7 +21,7 @@ public class BonusController {
     private final BonusService bonusService;
 
     @GetMapping
-    @PreAuthorize("hasRole('USER')")
+//    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<BonusResponse> getBonus(@AuthenticationPrincipal CustomerProfile customer) {
         BonusAccount account = bonusService.getOrCreateBonusAccount(customer);
 

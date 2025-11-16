@@ -6,21 +6,23 @@ import com.example.bank.domain.transaction.service.TransactionService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/transactions")
 @RequiredArgsConstructor
 public class TransactionController {
+
     private final TransactionService transactionService;
 
     @PostMapping
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Transaction> createTransaction(@RequestBody CreateTransactionRequest request){
+    public ResponseEntity<TransactionResponse> createTransaction(
+            @RequestBody CreateTransactionRequest request
+    ) {
         Transaction tx = transactionService.createTransaction(
                 request.getAccountId(),
                 request.getType(),
@@ -30,30 +32,48 @@ public class TransactionController {
                 request.getDescription(),
                 null
         );
+        return ResponseEntity.ok(toResponse(tx));
+    }
 
-        return ResponseEntity.ok(tx);
+    @GetMapping("/my")
+    public ResponseEntity<List<TransactionResponse>> myTransactions() {
+        Long demoAccountId = 1L;
+        List<Transaction> list = transactionService.getAccountTransactions(demoAccountId);
+        List<TransactionResponse> resp = list.stream()
+                .map(this::toResponse)
+                .toList();
+        return ResponseEntity.ok(resp);
     }
 
     @GetMapping("/account/{accountId}")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<Transaction>> getAccountTransactions(@PathVariable Long accountId){
-        return ResponseEntity.ok(transactionService.getAccountTransactions(accountId));
+    public ResponseEntity<List<TransactionResponse>> getAccountTransactions(
+            @PathVariable Long accountId
+    ) {
+        List<Transaction> list = transactionService.getAccountTransactions(accountId);
+        List<TransactionResponse> resp = list.stream()
+                .map(this::toResponse)
+                .toList();
+        return ResponseEntity.ok(resp);
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Transaction> getTransaction(@PathVariable Long id){
-        return ResponseEntity.ok(transactionService.getTransaction(id));
+    public ResponseEntity<TransactionResponse> getTransaction(@PathVariable Long id) {
+        Transaction tx = transactionService.getTransaction(id);
+        return ResponseEntity.ok(toResponse(tx));
     }
 
     @PostMapping("/{id}/suspicious")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Transaction> markAsSuspicious(@PathVariable Long id, @RequestBody MarkSuspiciousRequest request){
-        return ResponseEntity.ok(transactionService.markAsSuspicious(id, request.getReason()));
+    public ResponseEntity<TransactionResponse> markAsSuspicious(
+            @PathVariable Long id,
+            @RequestBody MarkSuspiciousRequest request
+    ) {
+        Transaction tx = transactionService.markAsSuspicious(id, request.getReason());
+        return ResponseEntity.ok(toResponse(tx));
     }
 
+
     @Data
-    public static class CreateTransactionRequest{
+    public static class CreateTransactionRequest {
         private Long accountId;
         private TransactionType type;
         private BigDecimal amount;
@@ -63,7 +83,38 @@ public class TransactionController {
     }
 
     @Data
-    public static class MarkSuspiciousRequest{
+    public static class MarkSuspiciousRequest {
         private String reason;
+    }
+
+    @Data
+    public static class TransactionResponse {
+        private Long id;
+        private Long accountId;
+        private TransactionType type;
+        private String status;
+        private BigDecimal amount;
+        private String currency;
+        private String direction;
+        private String description;
+        private boolean suspicious;
+        private String suspiciousReason;
+        private OffsetDateTime createdAt;
+    }
+
+    private TransactionResponse toResponse(Transaction tx) {
+        TransactionResponse r = new TransactionResponse();
+        r.setId(tx.getId());
+        r.setAccountId(tx.getAccount() != null ? tx.getAccount().getId() : null);
+        r.setType(tx.getType());
+        r.setStatus(tx.getStatus() != null ? tx.getStatus().name() : null);
+        r.setAmount(tx.getAmount());
+        r.setCurrency(tx.getCurrency());
+        r.setDirection(tx.getDirection());
+        r.setDescription(tx.getDescription());
+        r.setSuspicious(tx.isSuspicious());
+        r.setSuspiciousReason(tx.getSuspiciousReason());
+        r.setCreatedAt(tx.getCreatedAt());
+        return r;
     }
 }

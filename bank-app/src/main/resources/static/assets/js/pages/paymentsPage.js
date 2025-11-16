@@ -1,43 +1,80 @@
-import {requireAuth, logout} from '../core/auth.js';
-import {bindLogout, showToast} from '../core/ui.js';
-import {paymentApi} from '../api/paymentApi.js';
+// /assets/js/pages/paymentsPage.js
+import { requireAuth, logout } from '../core/auth.js';
+import { bindLogout, showToast } from '../core/ui.js';
+import { paymentApi } from '../api/paymentApi.js';
 
 requireAuth();
 bindLogout('logoutBtn', logout);
 
-const form = document.getElementById('paymentForm');
-const paymentsBody = document.querySelector('#paymentsTable tbody');
+const form = document.getElementById('paymentForm');  // убедись, что id есть в HTML
+const tableBody = document.querySelector('#paymentsTable tbody');
 
-form.addEventListener('submit', async (e) => {
+async function loadHistory() {
+  try {
+    const list = await paymentApi.my();
+    renderHistory(Array.isArray(list) ? list : []);
+  } catch (e) {
+    console.error(e);
+    showToast('Payments', 'Failed to load payments history', true);
+  }
+}
+
+function renderHistory(items) {
+  if (!tableBody) return;
+  tableBody.innerHTML = '';
+  if (!items.length) {
+    tableBody.innerHTML = `<tr><td colspan="4">No payments yet</td></tr>`;
+    return;
+  }
+
+  items.forEach(p => {
+    const dt = p.createdAt ? new Date(p.createdAt) : null;
+    const dateStr = dt && !Number.isNaN(dt.getTime())
+      ? dt.toLocaleDateString('en-US')
+      : '';
+
+    const amount = Number(p.amount || 0);
+    const sign = amount < 0 ? '-' : '';
+    const cls = amount < 0 ? 'amount-neg' : 'amount-pos';
+
+    tableBody.insertAdjacentHTML(
+      'beforeend',
+      `
+      <tr>
+        <td>${dateStr}</td>
+        <td>${p.category || ''}</td>
+        <td class="${cls}">${sign}${Math.abs(amount).toLocaleString('en-US')} ${p.currency || ''}</td>
+        <td>${p.status || ''}</td>
+      </tr>
+      `
+    );
+  });
+}
+
+if (form) {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const sourceType = document.getElementById('paymentSourceType').value;
-    const sourceId = Number(document.getElementById('paymentSourceId').value);
-    const body = {
-        amount: Number(document.getElementById('paymentAmount').value),
-        currency: document.getElementById('paymentCurrency').value,
-        category: document.getElementById('paymentCategory').value,
-        providerName: document.getElementById('paymentProvider').value,
-        detailsJson: document.getElementById('paymentDetails').value
+
+    const payload = {
+      sourceType: document.getElementById('sourceType').value || 'ACCOUNT',
+      sourceId: Number(document.getElementById('sourceId').value || '1'),
+      amount: Number(document.getElementById('amount').value || '0'),
+      currency: document.getElementById('currency').value || 'KZT',
+      category: document.getElementById('category').value,
+      provider: document.getElementById('provider').value,
+      comment: document.getElementById('comment').value,
     };
 
     try {
-        let payment;
-        if (sourceType === 'ACCOUNT') {
-            payment = await paymentApi.payFromAccountNow(sourceId, body);
-        } else {
-            payment = await paymentApi.payFromCardNow(sourceId, body);
-        }
-        showToast('Платёж выполнен', `${payment.amount} ${payment.currency}`);
-        loadHistory();
+      await paymentApi.create(payload);
+      showToast('Payment success', 'Payment was created');
+      form.reset();
+      await loadHistory();
     } catch (err) {
-        showToast('Ошибка платежа', err.message, true);
+      console.error(err);
+      showToast('Payment failed', err.message || 'Error while creating payment', true);
     }
-});
-
-// history – тут нужен customerId, ты можешь заменить на свой способ
-async function loadHistory() {
-    paymentsBody.innerHTML = '';
-    // временно просто оставим пусто — или если есть customerId, подставь
+  });
 }
 
-loadHistory().catch(console.error);
+loadHistory().catch(() => {});

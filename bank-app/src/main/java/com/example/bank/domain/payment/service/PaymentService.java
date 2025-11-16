@@ -40,6 +40,44 @@ public class PaymentService {
     private final ReceiptFacade receiptFacade;
     private final NotificationService notificationService;
 
+    @Transactional
+    public Payment createPayment(
+            String sourceType,
+            Long sourceId,
+            BigDecimal amount,
+            String currency,
+            PaymentCategory category,
+            String providerName,
+            String detailsJson
+    ) {
+        if (sourceType == null || sourceId == null) {
+            throw new IllegalArgumentException("sourceType и sourceId обязательны");
+        }
+        if (amount == null || amount.signum() <= 0) {
+            throw new IllegalArgumentException("Amount must be positive");
+        }
+
+        SourceType type;
+        try {
+            type = SourceType.valueOf(sourceType.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Unsupported sourceType: " + sourceType);
+        }
+
+        return switch (type) {
+            case ACCOUNT -> payFromAccountNow(sourceId, amount, currency, category, providerName, detailsJson);
+            case CARD -> payFromCardNow(sourceId, amount, currency, category, providerName, detailsJson);
+        };
+    }
+
+    @Transactional(readOnly = true)
+    public List<Payment> getAccountPayments(Long accountId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found " + accountId));
+
+        return paymentRepository.findByFromAccountOrderByCreatedAtDesc(account);
+    }
+
 
     @Transactional
     public Payment payFromAccountNow(Long accountId,
@@ -57,8 +95,7 @@ public class PaymentService {
                 .orElseThrow(() -> new IllegalArgumentException("Account not found " + accountId));
         CustomerProfile customer = account.getCustomer();
 
-        PaymentType paymentType = resolveType(category);
-        String description = paymentType.buildDescription(providerName, detailsJson);
+        String description = buildDescription(category, providerName, detailsJson);
 
         Payment payment = Payment.builder()
                 .customer(customer)
@@ -107,7 +144,6 @@ public class PaymentService {
         return payment;
     }
 
-
     @Transactional
     public Payment payFromCardNow(Long cardId,
                                   BigDecimal amount,
@@ -137,8 +173,7 @@ public class PaymentService {
         }
         CustomerProfile customer = account.getCustomer();
 
-        PaymentType paymentType = resolveType(category);
-        String description = paymentType.buildDescription(providerName, detailsJson);
+        String description = buildDescription(category, providerName, detailsJson);
 
         Payment payment = Payment.builder()
                 .customer(customer)
@@ -195,162 +230,6 @@ public class PaymentService {
         return payment;
     }
 
-
-    @Transactional
-    public Payment scheduleFromAccount(Long accountId,
-                                       BigDecimal amount,
-                                       String currency,
-                                       PaymentCategory category,
-                                       String providerName,
-                                       String detailsJson,
-                                       OffsetDateTime when) {
-
-        if (amount == null || amount.signum() <= 0) {
-            throw new IllegalArgumentException("Amount must be positive");
-        }
-
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new IllegalArgumentException("Account not found: " + accountId));
-
-        Payment payment = Payment.builder()
-                .customer(account.getCustomer())
-                .fromAccount(account)
-                .category(category)
-                .providerName(providerName)
-                .details(detailsJson)
-                .amount(amount)
-                .currency(currency)
-                .status(PaymentStatus.SCHEDULED)
-                .scheduledAt(when)
-                .createdAt(OffsetDateTime.now())
-                .build();
-
-        return paymentRepository.save(payment);
-    }
-
-    @Transactional
-    public Payment scheduleFromCard(Long cardId,
-                                    BigDecimal amount,
-                                    String currency,
-                                    PaymentCategory category,
-                                    String providerName,
-                                    String detailsJson,
-                                    OffsetDateTime when) {
-
-        if (amount == null || amount.signum() <= 0) {
-            throw new IllegalArgumentException("Amount must be positive");
-        }
-
-        Card card = cardRepository.findById(cardId)
-                .orElseThrow(() -> new IllegalArgumentException("Card not found: " + cardId));
-
-        Account account = card.getAccount();
-        if (account == null) {
-            throw new IllegalStateException("Card " + cardId + " has no linked account");
-        }
-
-        Payment payment = Payment.builder()
-                .customer(account.getCustomer())
-                .fromCard(card)
-                .category(category)
-                .providerName(providerName)
-                .details(detailsJson)
-                .amount(amount)
-                .currency(currency)
-                .status(PaymentStatus.SCHEDULED)
-                .scheduledAt(when)
-                .createdAt(OffsetDateTime.now())
-                .build();
-
-        return paymentRepository.save(payment);
-    }
-
-
-    @Transactional
-    public Payment executeScheduledPayment(Long paymentId) {
-        Payment payment = getPayment(paymentId);
-
-        if (payment.getStatus() != PaymentStatus.SCHEDULED) {
-            throw new IllegalStateException("Payment is not scheduled: " + paymentId);
-        }
-
-        PaymentCategory category = payment.getCategory();
-        PaymentType type = resolveType(category);
-        String description = type.buildDescription(payment.getProviderName(), payment.getDetails());
-
-        CustomerProfile customer = payment.getCustomer();
-
-        try {
-            Transaction tx;
-
-            if (payment.getFromAccount() != null) {
-                tx = accountPaymentChannel.pay(
-                        payment.getAmount(),
-                        payment.getCurrency(),
-                        description,
-                        payment.getFromAccount(),
-                        null
-                );
-            } else if (payment.getFromCard() != null) {
-                Card card = payment.getFromCard();
-                card.updateStatusIfExpired();
-                if (card.getStatus() == CardStatus.EXPIRED) {
-                    throw new IllegalStateException("Card is expired");
-                }
-                if (card.getStatus() != CardStatus.ACTIVE) {
-                    throw new IllegalStateException("Card is not active: " + card.getStatus());
-                }
-
-                tx = cardPaymentChannel.pay(
-                        payment.getAmount(),
-                        payment.getCurrency(),
-                        description,
-                        null,
-                        card
-                );
-            } else {
-                throw new IllegalStateException("Scheduled payment has no source (account/card)");
-            }
-
-            payment.setStatus(PaymentStatus.PAID);
-            payment.setPaidAt(OffsetDateTime.now());
-            payment.setTransaction(tx);
-
-            payment = paymentRepository.save(payment);
-
-            receiptFacade.sendPaymentReceipt(payment);
-
-        } catch (Exception ex) {
-            payment.setStatus(PaymentStatus.FAILED);
-            payment = paymentRepository.save(payment);
-
-            notificationService.notifyInApp(
-                    customer,
-                    NotificationType.PAYMENT,
-                    "Scheduled payment failed",
-                    "Scheduled payment to provider " + payment.getProviderName() +
-                            " failed: " + ex.getMessage(),
-                    "{\"paymentId\":" + payment.getId() + "}"
-            );
-        }
-
-        return payment;
-    }
-
-
-    @Transactional
-    public Payment cancelScheduledPayment(Long paymentId) {
-        Payment payment = getPayment(paymentId);
-
-        if (payment.getStatus() != PaymentStatus.SCHEDULED) {
-            throw new IllegalStateException("Payment is not scheduled: " + paymentId);
-        }
-
-        payment.setStatus(PaymentStatus.CANCELLED);
-        return paymentRepository.save(payment);
-    }
-
-
     @Transactional(readOnly = true)
     public Payment getPayment(Long id) {
         return paymentRepository.findById(id)
@@ -373,6 +252,15 @@ public class PaymentService {
     }
 
 
+    private String buildDescription(PaymentCategory category, String providerName, String detailsJson) {
+        if (category == null) {
+            return providerName != null ? providerName : "Payment";
+        }
+
+        PaymentType paymentType = resolveType(category);
+        return paymentType.buildDescription(providerName, detailsJson);
+    }
+
     private PaymentType resolveType(PaymentCategory category) {
         return paymentTypes.stream()
                 .filter(t -> t.getCategory() == category)
@@ -380,5 +268,10 @@ public class PaymentService {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Unsupported payment category: " + category
                 ));
+    }
+
+    private enum SourceType {
+        ACCOUNT,
+        CARD
     }
 }

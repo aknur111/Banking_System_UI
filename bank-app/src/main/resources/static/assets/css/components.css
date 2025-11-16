@@ -177,3 +177,37 @@
 .hidden {
     display: none !important;
 }
+
+/* мини-карточки на дашборде */
+.card__label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+    text-transform: none;
+}
+
+.card__value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+}
+
+.card__value--muted {
+    color: var(--text-muted);
+}
+
+.card__meta {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+/* суммы */
+.amount--pos,
+.amount-pos {
+    color: #4ade80;
+}
+
+.amount--neg,
+.amount-neg {
+    color: #fb7185;
+}

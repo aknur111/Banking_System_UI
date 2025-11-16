@@ -1,19 +1,16 @@
 package com.example.bank.domain.credit.service;
 
-import com.example.bank.domain.customer.model.CustomerProfile;
 import com.example.bank.domain.credit.model.Credit;
 import com.example.bank.domain.credit.model.CreditStatus;
 import com.example.bank.domain.credit.model.CreditType;
 import com.example.bank.domain.credit.repository.CreditRepository;
-import com.example.bank.domain.credit.strategy.CreditStrategy;
-import com.example.bank.domain.credit.strategy.CreditStrategyFactory;
 import com.example.bank.domain.currency.model.Currency;
+import com.example.bank.domain.customer.model.CustomerProfile;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -23,7 +20,6 @@ import java.util.Optional;
 public class CreditService {
 
     private final CreditRepository creditRepository;
-    private final CreditStrategyFactory strategyFactory;
 
     @Transactional
     public Credit createCredit(CustomerProfile customer,
@@ -33,27 +29,17 @@ public class CreditService {
                                int termMonths,
                                CreditType creditType) {
 
-        CreditStrategy strategy = strategyFactory.getStrategy(creditType);
-
-        if (interestRateAnnual.compareTo(strategy.getMinInterestRate()) < 0) {
-            throw new IllegalArgumentException(
-                    "Interest rate too low for " + creditType +
-                            ". Minimum: " + strategy.getMinInterestRate()
-            );
+        if (customer == null) {
+            throw new IllegalArgumentException("Customer is required");
         }
-
-        if (principalAmount.compareTo(strategy.getMaxAmount()) > 0) {
-            throw new IllegalArgumentException(
-                    "Amount too high for " + creditType +
-                            ". Maximum: " + strategy.getMaxAmount()
-            );
+        if (principalAmount == null || principalAmount.signum() <= 0) {
+            throw new IllegalArgumentException("Principal amount must be positive");
         }
-
-        if (termMonths > strategy.getMaxTermMonths()) {
-            throw new IllegalArgumentException(
-                    "Term too long for " + creditType +
-                            ". Maximum months: " + strategy.getMaxTermMonths()
-            );
+        if (interestRateAnnual == null || interestRateAnnual.signum() <= 0) {
+            throw new IllegalArgumentException("Interest rate must be positive");
+        }
+        if (termMonths <= 0) {
+            throw new IllegalArgumentException("Term months must be > 0");
         }
 
         Credit credit = Credit.builder()
@@ -71,44 +57,31 @@ public class CreditService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Credit> getCredit(Long creditId) {
-        return creditRepository.findById(creditId);
-    }
-
-    @Transactional
-    public Credit closeCredit(Long creditId) {
-        Credit credit = creditRepository.findById(creditId)
-                .orElseThrow(() -> new IllegalArgumentException("Credit not found: " + creditId));
-
-        if (credit.getStatus() != CreditStatus.ACTIVE) {
-            throw new IllegalArgumentException("Credit is not active: " + creditId);
-        }
-
-        BigDecimal interest = credit.getPrincipalAmount()
-                .multiply(credit.getInterestRateAnnual())
-                .multiply(BigDecimal.valueOf(credit.getTermMonths()))
-                .divide(BigDecimal.valueOf(12), 2, RoundingMode.HALF_UP);
-
-        BigDecimal totalAmount = credit.getPrincipalAmount().add(interest);
-
-        credit.setStatus(CreditStatus.CLOSED);
-        credit.setClosedAt(OffsetDateTime.now());
-
-        return creditRepository.save(credit);
-    }
-
-    @Transactional(readOnly = true)
-    public List<Credit> getCreditsByStatus(CreditStatus status) {
-        return creditRepository.findByStatus(status);
-    }
-
-    @Transactional(readOnly = true)
     public List<Credit> getCreditsByCustomer(CustomerProfile customer) {
         return creditRepository.findByCustomerOrderByCreatedAtDesc(customer);
     }
 
     @Transactional(readOnly = true)
+    public Optional<Credit> getCredit(Long id) {
+        return creditRepository.findById(id);
+    }
+
+    @Transactional(readOnly = true)
     public List<Credit> getAllCredits() {
         return creditRepository.findAll();
+    }
+
+    @Transactional
+    public Credit closeCredit(Long id) {
+        Credit credit = creditRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Credit not found: " + id));
+
+        if (credit.getStatus() == CreditStatus.CLOSED) {
+            return credit;
+        }
+
+        credit.setStatus(CreditStatus.CLOSED);
+        credit.setClosedAt(OffsetDateTime.now());
+        return creditRepository.save(credit);
     }
 }

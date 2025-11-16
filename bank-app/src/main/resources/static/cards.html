@@ -122,7 +122,9 @@
             <div class="nav-title">Actions</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
                 <a class="btn" href="profile.html">Profile</a>
-                <button id="logoutBtn" class="btn"><svg class="nav-icon"><use href="#ic-logout"/></svg><span>Sign out</span></button>
+                <button id="logoutBtn" class="btn">
+                    <svg class="nav-icon"><use href="#ic-logout"/></svg><span>Sign out</span>
+                </button>
             </div>
         </div>
 
@@ -182,95 +184,7 @@
 
 <div id="toastContainer" class="hidden"></div>
 
-<script type="module">
-    import {requireAuth, logout} from '/assets/js/core/auth.js';
-    import {bindLogout, showToast} from '/assets/js/core/ui.js';
-    import {cardApi} from '/assets/js/api/cardApi.js';
-
-    if (!requireAuth()) { window.location.href = '/index.html'; }
-
-    bindLogout('logoutBtn', logout);
-
-    document.querySelectorAll('.nav-list a').forEach(a=>{
-      if (a.getAttribute('href') && location.pathname.endsWith(a.getAttribute('href'))) {
-        a.closest('.nav-item')?.classList.add('nav-item--active');
-      }
-    });
-
-    const tbody = document.querySelector('#cardsTable tbody');
-    const refreshBtn = document.getElementById('refreshBtn');
-    const drawer = document.getElementById('cardDrawer');
-    const drawerClose = document.getElementById('drawerClose');
-    const drawerBody = document.getElementById('drawerBody');
-    const btnFreeze = document.getElementById('btnFreeze');
-    const btnLimits = document.getElementById('btnLimits');
-
-    let currentCard = null;
-
-    refreshBtn.addEventListener('click', loadCards);
-    drawerClose.addEventListener('click', closeDrawer);
-    btnFreeze.addEventListener('click', () => {
-      if (!currentCard) return;
-      showToast('Action', `Freeze card #${currentCard.id} — stub`);
-    });
-    btnLimits.addEventListener('click', () => {
-      if (!currentCard) return;
-      showToast('Action', `Edit limits for card #${currentCard.id} — stub`);
-    });
-
-    async function loadCards(){
-      tbody.innerHTML = '';
-      try{
-        const cards = await cardApi.myCards();
-        if (!cards || cards.length === 0){
-          tbody.innerHTML = `<tr><td colspan="6" style="opacity:.7">No cards yet</td></tr>`;
-          return;
-        }
-        for (const c of cards){
-          const last4 = String(c.cardNumber ?? '').slice(-4).padStart(4,'•');
-          const row = document.createElement('tr');
-          row.className = 'row-click';
-          row.innerHTML = `
-            <td>**** **** **** ${last4}</td>
-            <td>${c.accountId ?? ''}</td>
-            <td>${c.holderName ?? '—'}</td>
-            <td><span class="badge ${c.status==='ACTIVE'?'badge--success':'badge--muted'}">${c.status}</span></td>
-            <td>${(c.expiryMonth??'')}/${(c.expiryYear??'')}</td>
-            <td><span class="pill">${c.dailyLimit ? \`\${c.dailyLimit} \${c.currency||'KZT'} daily\` : '—'}</span></td>
-          `;
-          row.addEventListener('click', ()=>openDrawer(c));
-          tbody.appendChild(row);
-        }
-      }catch(e){
-        tbody.innerHTML = `<tr><td colspan="6" style="color:#fb7185">Failed to load cards</td></tr>`;
-      }
-    }
-
-    function openDrawer(card){
-      currentCard = card;
-      const masked = '**** **** **** ' + String(card.cardNumber ?? '').slice(-4).padStart(4,'•');
-      drawerBody.innerHTML = `
-        <div><div style="opacity:.7;font-size:.85rem">Card</div><div style="font-weight:600">${masked}</div></div>
-        <div><div style="opacity:.7;font-size:.85rem">Account</div><div>${card.accountId ?? ''}</div></div>
-        <div><div style="opacity:.7;font-size:.85rem">Holder</div><div>${card.holderName ?? '—'}</div></div>
-        <div><div style="opacity:.7;font-size:.85rem">Status</div>
-          <div><span class="badge ${card.status==='ACTIVE'?'badge--success':'badge--muted'}">${card.status}</span></div>
-        </div>
-        <div><div style="opacity:.7;font-size:.85rem">Expiry</div><div>${(card.expiryMonth??'')}/${(card.expiryYear??'')}</div></div>
-        <div><div style="opacity:.7;font-size:.85rem">Limits</div><div>${card.dailyLimit ? (card.dailyLimit+' '+(card.currency||'KZT')+' daily') : '—'}</div></div>
-      `;
-      drawer.classList.add('drawer--open');
-      drawer.setAttribute('aria-hidden','false');
-    }
-
-    function closeDrawer(){
-      drawer.classList.remove('drawer--open');
-      drawer.setAttribute('aria-hidden','true');
-      currentCard = null;
-    }
-
-    // Initial load
-    loadCards();
-</script>
+<!-- Вся логика вынесена в отдельный JS-файл -->
+<script type="module" src="/assets/js/pages/cardsPage.js"></script>
 </body>
 </html>

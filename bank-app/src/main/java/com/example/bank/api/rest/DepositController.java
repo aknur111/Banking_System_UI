@@ -1,6 +1,5 @@
 package com.example.bank.api.rest;
 
-import com.example.bank.domain.customer.model.CustomerProfile;
 import com.example.bank.domain.currency.model.Currency;
 import com.example.bank.domain.deposit.model.Deposit;
 import com.example.bank.domain.deposit.model.DepositStatus;
@@ -8,8 +7,6 @@ import com.example.bank.domain.deposit.service.DepositService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +23,6 @@ public class DepositController {
     private final DepositService depositService;
 
     @PostMapping("/api/deposits")
-    @PreAuthorize("hasAuthority('USER')")
     @ResponseBody
     public ResponseEntity<DepositResponse> createDeposit(@RequestBody CreateDepositRequest request) {
         Deposit deposit = depositService.createDeposit(
@@ -35,54 +31,60 @@ public class DepositController {
                 request.getCurrency(),
                 request.getMonthlyInterest(),
                 request.getTermMonths(),
-                request.getEmail()    // <-- сюда
+                request.getEmail()
         );
-        DepositResponse response = mapToResponse(deposit);
-        return ResponseEntity.status(201).body(response);
+        return ResponseEntity.status(201).body(mapToResponse(deposit));
+    }
+
+    @GetMapping("/api/deposits/my")
+    @ResponseBody
+    public ResponseEntity<List<DepositResponse>> getMyDeposits() {
+        List<Deposit> deposits = depositService.getAllDeposits();
+        List<DepositResponse> responses = deposits.stream()
+                .map(this::mapToResponse)
+                .toList();
+        return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/api/deposits")
-    @PreAuthorize("hasAuthority('USER')")
     @ResponseBody
-    public ResponseEntity<List<DepositResponse>> getDeposits(@AuthenticationPrincipal CustomerProfile customer) {
-        List<Deposit> deposits = depositService.getAllDeposits();
-        List<DepositResponse> responses = deposits.stream().map(this::mapToResponse).toList();
+    public ResponseEntity<List<DepositResponse>> getDepositsByAccount(@RequestParam Long accountId) {
+        List<DepositResponse> responses = depositService.getAllDeposits().stream()
+                .filter(d -> d.getAccount() != null && d.getAccount().getId().equals(accountId))
+                .map(this::mapToResponse)
+                .toList();
         return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/api/deposits/{id}")
-    @PreAuthorize("hasAuthority('USER')")
     @ResponseBody
     public ResponseEntity<DepositResponse> getDeposit(@PathVariable Long id) {
         Optional<Deposit> depositOpt = depositService.getDeposit(id);
-        if (depositOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        DepositResponse response = mapToResponse(depositOpt.get());
-        return ResponseEntity.ok(response);
+        return depositOpt
+                .map(deposit -> ResponseEntity.ok(mapToResponse(deposit)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping("/api/deposits/{id}/close")
-    @PreAuthorize("hasAuthority('USER')")
     @ResponseBody
     public ResponseEntity<DepositResponse> closeDeposit(@PathVariable Long id,
                                                         @RequestParam(required = false) String email) {
-
         Deposit closed = depositService.closeDeposit(id, email);
         return ResponseEntity.ok(mapToResponse(closed));
     }
 
     @GetMapping("/api/deposits/status/{status}")
-    @PreAuthorize("hasAuthority('USER')")
     @ResponseBody
     public ResponseEntity<List<DepositResponse>> getDepositsByStatus(@PathVariable DepositStatus status) {
         List<Deposit> deposits = depositService.getDepositsByStatus(status);
-        List<DepositResponse> responses = deposits.stream().map(this::mapToResponse).toList();
+        List<DepositResponse> responses = deposits.stream()
+                .map(this::mapToResponse)
+                .toList();
         return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/ui/deposits")
-    public String getDepositsPage(Model model, @AuthenticationPrincipal CustomerProfile customer) {
+    public String getDepositsPage(Model model) {
         List<Deposit> deposits = depositService.getAllDeposits();
         model.addAttribute("deposits", deposits);
         return "deposits";
@@ -106,7 +108,7 @@ public class DepositController {
         private Currency currency;
         private BigDecimal monthlyInterest;
         private int termMonths;
-        private String email;   // <- новый параметр
+        private String email;
     }
 
     @Data
@@ -123,16 +125,16 @@ public class DepositController {
     }
 
     private DepositResponse mapToResponse(Deposit deposit) {
-        DepositResponse response = new DepositResponse();
-        response.setId(deposit.getId());
-        response.setAccountId(deposit.getAccount().getId());
-        response.setPrincipalAmount(deposit.getPrincipalAmount());
-        response.setCurrency(deposit.getCurrency());
-        response.setMonthlyInterest(deposit.getMonthlyInterest());
-        response.setTermMonths(deposit.getTermMonths());
-        response.setStatus(deposit.getStatus());
-        response.setOpenedAt(deposit.getOpenedAt());
-        response.setClosedAt(deposit.getClosedAt());
-        return response;
+        DepositResponse r = new DepositResponse();
+        r.setId(deposit.getId());
+        r.setAccountId(deposit.getAccount().getId());
+        r.setPrincipalAmount(deposit.getPrincipalAmount());
+        r.setCurrency(deposit.getCurrency());
+        r.setMonthlyInterest(deposit.getMonthlyInterest());
+        r.setTermMonths(deposit.getTermMonths());
+        r.setStatus(deposit.getStatus());
+        r.setOpenedAt(deposit.getOpenedAt());
+        r.setClosedAt(deposit.getClosedAt());
+        return r;
     }
 }

@@ -7,16 +7,33 @@ import { accountApi } from '../api/accountApi.js';
 import { transactionApi } from '../api/transactionApi.js';
 
 if (!getToken()) {
-  window.location.href = '/index.html';
-} else {
+  // если токен не нужен, можно закомментить, но пусть будет —
+  // сейчас всё равно backend всё пускает
   requireAuth();
 }
 
 bindLogout('logoutBtn', logout);
-try { connectNotifications(); } catch {}
+try {
+  connectNotifications();
+} catch { /* ignore */ }
 
 const summaryRoot = document.getElementById('summaryCards');
 const txTableBody = document.querySelector('#lastTransactionsTable tbody');
+
+// навешиваем обработчики на кнопки
+const btnOwn = document.getElementById('btnTransferOwn');
+const btnClient = document.getElementById('btnTransferClient');
+const btnBills = document.getElementById('btnPayBills');
+
+if (btnOwn) btnOwn.addEventListener('click', () => {
+  window.location.href = '/payments.html#own';
+});
+if (btnClient) btnClient.addEventListener('click', () => {
+  window.location.href = '/payments.html#client';
+});
+if (btnBills) btnBills.addEventListener('click', () => {
+  window.location.href = '/payments.html#bills';
+});
 
 (async function init() {
   const accounts = await safe(() => accountApi.myAccounts(), []);
@@ -36,9 +53,9 @@ function renderSummary(accounts = []) {
     'beforeend',
     `
     <div class="card">
-      <div class="card__label">Total balance</div>
-      <div class="card__value">${fmt(total)} ₸</div>
-      <div class="card__meta">across all accounts</div>
+      <div class="label">Total balance</div>
+      <div class="value">${fmt(total)} ₸</div>
+      <div class="muted" style="font-size:.85rem">across all accounts</div>
     </div>
     `
   );
@@ -47,16 +64,16 @@ function renderSummary(accounts = []) {
   const fill = top.length ? top : [{}, {}];
 
   fill.forEach((a, i) => {
-    const label = a && a.id ? \`Account #\${a.id}\` : i === 0 ? 'Checking account' : 'Savings account';
-    const value = a && a.balance != null ? \`\${fmt(a.balance)} \${a.currency ?? ''}\` : '—';
+    const label = a && a.id ? `Account #${a.id}` : i === 0 ? 'Checking account' : 'Savings account';
+    const value = a && a.balance != null ? `${fmt(a.balance)} ${a.currency ?? ''}` : '—';
     const meta = a && a.type ? a.type : 'no data';
     summaryRoot.insertAdjacentHTML(
       'beforeend',
       `
       <div class="card">
-        <div class="card__label">${label}</div>
-        <div class="card__value">${value}</div>
-        <div class="card__meta">${meta}</div>
+        <div class="label">${label}</div>
+        <div class="value">${value}</div>
+        <div class="muted" style="font-size:.85rem">${meta}</div>
       </div>
       `
     );
@@ -66,9 +83,9 @@ function renderSummary(accounts = []) {
     'beforeend',
     `
     <div class="card card--wide">
-      <div class="card__label">Credit load</div>
-      <div class="card__value card__value--muted">0 ₸</div>
-      <div class="card__meta">no active loans</div>
+      <div class="label">Credit load</div>
+      <div class="value muted">0 ₸</div>
+      <div class="muted" style="font-size:.85rem">no active loans</div>
     </div>
     `
   );
@@ -77,13 +94,19 @@ function renderSummary(accounts = []) {
 function renderTransactions(list = []) {
   if (!txTableBody) return;
   txTableBody.innerHTML = '';
-  if (!list.length) return;
+  if (!list.length) {
+    txTableBody.insertAdjacentHTML(
+      'beforeend',
+      `<tr><td colspan="5" class="muted">No transactions yet</td></tr>`
+    );
+    return;
+  }
 
   list.forEach(t => {
     const out = String(t.direction).toUpperCase() === 'OUT';
     const sign = out ? '-' : '+';
     const amount = `${sign}${fmt(t.amount)} ${t.currency ?? ''}`;
-    const cls = out ? 'amount--neg' : 'amount--pos';
+    const cls = out ? 'amount-neg' : 'amount-pos'; // совпадает с css
     const status = String(t.status || '');
     const done = ['completed', 'done', 'success'].includes(status.toLowerCase());
     const badge = done
@@ -95,8 +118,8 @@ function renderTransactions(list = []) {
       `
       <tr>
         <td>${dateFmt(t.createdAt)}</td>
-        <td>${t.accountId ?? ''}</td>
         <td>${t.description ?? ''}</td>
+        <td>${t.accountId ?? ''}</td>
         <td class="${cls}">${amount}</td>
         <td>${badge}</td>
       </tr>
@@ -119,7 +142,8 @@ function dateFmt(d) {
 async function safe(fn, fallback) {
   try {
     return await fn();
-  } catch {
+  } catch (e) {
+    console.error('dashboard request failed', e);
     return fallback;
   }
 }

@@ -19,26 +19,26 @@ public class CurrencyController {
     private final CurrencyService currencyService;
 
     @GetMapping("/supported")
-    @PreAuthorize("hasRole('USER')")
+//    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Set<String>> getSupported() {
         return ResponseEntity.ok(currencyService.supported());
     }
 
     @GetMapping("/base-rates")
-    @PreAuthorize("hasRole('USER')")
+//    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Map<String, BigDecimal>> getBaseRates() {
         return ResponseEntity.ok(currencyService.baseRates());
     }
 
     @GetMapping("/rate/{from}/{to}")
-    @PreAuthorize("hasRole('USER')")
+//    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<BigDecimal> getRate(@PathVariable String from,
                                               @PathVariable String to) {
         return ResponseEntity.ok(currencyService.rate(from, to));
     }
 
     @PostMapping("/convert")
-    @PreAuthorize("hasRole('USER')")
+//    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ConvertResponse> convert(@RequestBody ConvertRequest request) {
         BigDecimal result = currencyService.convert(
                 request.getAmount(),

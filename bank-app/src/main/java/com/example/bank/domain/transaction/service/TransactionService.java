@@ -3,6 +3,8 @@ package com.example.bank.domain.transaction.service;
 import com.example.bank.domain.account.model.Account;
 import com.example.bank.domain.account.repository.AccountRepository;
 import com.example.bank.domain.card.model.Card;
+import com.example.bank.domain.customer.model.CustomerProfile;
+import com.example.bank.domain.customer.repository.CustomerProfileRepository;
 import com.example.bank.domain.transaction.base.BasicTransactionProcessor;
 import com.example.bank.domain.transaction.base.TransactionProcessor;
 import com.example.bank.domain.transaction.decorator.BonusTransactionDecorator;
@@ -26,6 +28,7 @@ public class TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
+    private final CustomerProfileRepository customerProfileRepository;
 
     private TransactionProcessor buildProcessor() {
         TransactionProcessor basic = new BasicTransactionProcessor(transactionRepository);
@@ -96,7 +99,6 @@ public class TransactionService {
         );
     }
 
-
     @Transactional(readOnly = true)
     public List<Transaction> getAccountTransactions(Long accountId) {
         Account account = accountRepository.findById(accountId)
@@ -104,15 +106,44 @@ public class TransactionService {
         return transactionRepository.findByAccountOrderByCreatedAtDesc(account);
     }
 
+    @Transactional(readOnly = true)
     public Transaction getTransaction(Long id) {
         return transactionRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Transaction not found: " + id));
     }
 
+    @Transactional
     public Transaction markAsSuspicious(Long id, String reason) {
         Transaction tx = getTransaction(id);
         tx.setSuspicious(true);
         tx.setSuspiciousReason(reason);
         return transactionRepository.save(tx);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Transaction> getCustomerTransactions(CustomerProfile customer) {
+        if (customer == null) {
+            return List.of();
+        }
+
+        List<Account> accounts = accountRepository.findByCustomer(customer);
+        if (accounts.isEmpty()) {
+            return List.of();
+        }
+
+        return transactionRepository.findByAccountInOrderByCreatedAtDesc(accounts);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Transaction> getCustomerTransactions(Long customerId) {
+        CustomerProfile customer = customerProfileRepository.findById(customerId)
+                .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + customerId));
+
+        return getCustomerTransactions(customer);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Transaction> getAllTransactions() {
+        return transactionRepository.findAllByOrderByCreatedAtDesc();
     }
 }

@@ -86,4 +86,8 @@ public class AccountService {
         account.setActive(false);
         return accountRepository.save(account);
     }
+    @Transactional(readOnly = true)
+    public List<Account> getAllAccounts() {
+        return accountRepository.findAll();
+    }
 }

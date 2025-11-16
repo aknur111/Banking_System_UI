@@ -9,13 +9,12 @@ public class ConsumerCreditStrategy implements CreditStrategy {
 
     @Override
     public BigDecimal getMinInterestRate() {
-        // например 5% годовых
         return BigDecimal.valueOf(5.0);
     }
 
     @Override
     public BigDecimal getMaxAmount() {
-        return BigDecimal.valueOf(1_000_000);
+        return BigDecimal.valueOf(1000000);
     }
 
     @Override

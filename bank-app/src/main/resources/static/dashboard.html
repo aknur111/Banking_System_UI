@@ -172,16 +172,20 @@
             <div class="card">
                 <div style="font-weight:700;letter-spacing:.12em;opacity:.8;margin-bottom:8px;text-transform:uppercase">Quick actions</div>
                 <div class="actions">
-                    <button class="btn btn--primary" type="button">
-                        <span>Transfer between my accounts</span><span style="margin-left:auto;opacity:.7">instant, no fee</span>
+                    <button class="btn btn--primary" type="button" id="btnTransferOwn">
+                        <span>Transfer between my accounts</span>
+                        <span style="margin-left:auto;opacity:.7">instant, no fee</span>
                     </button>
-                    <button class="btn" type="button">
-                        <span>Transfer to Freedom Bank client</span><span style="margin-left:auto;opacity:.7">by phone or account number</span>
+                    <button class="btn" type="button" id="btnTransferClient">
+                        <span>Transfer to Freedom Bank client</span>
+                        <span style="margin-left:auto;opacity:.7">by phone or account number</span>
                     </button>
-                    <button class="btn" type="button">
-                        <span>Pay bills</span><span style="margin-left:auto;opacity:.7">mobile, utilities, internet</span>
+                    <button class="btn" type="button" id="btnPayBills">
+                        <span>Pay bills</span>
+                        <span style="margin-left:auto;opacity:.7">mobile, utilities, internet</span>
                     </button>
                 </div>
+
             </div>
 
             <div class="card">
@@ -246,5 +250,6 @@
 
 <div id="toastContainer" class="hidden"></div>
 <script type="module" src="/assets/js/pages/dashboardPage.js"></script>
+
 </body>
 </html>

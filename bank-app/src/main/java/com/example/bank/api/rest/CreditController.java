@@ -1,16 +1,15 @@
 package com.example.bank.api.rest;
 
-import com.example.bank.domain.customer.model.CustomerProfile;
-import com.example.bank.domain.customer.repository.CustomerProfileRepository;
-import com.example.bank.domain.currency.model.Currency;
 import com.example.bank.domain.credit.model.Credit;
 import com.example.bank.domain.credit.model.CreditStatus;
 import com.example.bank.domain.credit.model.CreditType;
 import com.example.bank.domain.credit.service.CreditService;
+import com.example.bank.domain.currency.model.Currency;
+import com.example.bank.domain.customer.model.CustomerProfile;
+import com.example.bank.domain.customer.repository.CustomerProfileRepository;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -18,27 +17,23 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
+@RequiredArgsConstructor
 public class CreditController {
 
     private final CreditService creditService;
     private final CustomerProfileRepository customerProfileRepository;
 
-    public CreditController(CreditService creditService,
-                            CustomerProfileRepository customerProfileRepository) {
-        this.creditService = creditService;
-        this.customerProfileRepository = customerProfileRepository;
-    }
-
-
     @PostMapping("/api/credits")
-    @PreAuthorize("hasRole('USER')")
     @ResponseBody
-    public ResponseEntity<CreditResponse> createCredit(
-            @RequestBody CreateCreditRequest request
-    ) {
+    public ResponseEntity<?> createCredit(@RequestBody CreateCreditRequest request) {
+        if (request.getCustomerId() == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Customer is required"));
+        }
+
         CustomerProfile customer = customerProfileRepository.findById(request.getCustomerId())
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + request.getCustomerId()));
 
@@ -54,12 +49,19 @@ public class CreditController {
         return ResponseEntity.status(201).body(mapToResponse(credit));
     }
 
-    @GetMapping("/api/credits")
-    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/api/credits/my")
     @ResponseBody
-    public ResponseEntity<List<CreditResponse>> getCredits(
-            @RequestParam Long customerId
-    ) {
+    public ResponseEntity<List<CreditResponse>> getMyCredits() {
+        List<Credit> credits = creditService.getAllCredits();
+        List<CreditResponse> responses = credits.stream()
+                .map(this::mapToResponse)
+                .toList();
+        return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/api/credits")
+    @ResponseBody
+    public ResponseEntity<List<CreditResponse>> getCreditsByCustomerId(@RequestParam Long customerId) {
         CustomerProfile customer = customerProfileRepository.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + customerId));
 
@@ -72,7 +74,6 @@ public class CreditController {
     }
 
     @GetMapping("/api/credits/{id}")
-    @PreAuthorize("hasRole('USER')")
     @ResponseBody
     public ResponseEntity<CreditResponse> getCredit(@PathVariable Long id) {
         Optional<Credit> creditOpt = creditService.getCredit(id);
@@ -82,7 +83,6 @@ public class CreditController {
     }
 
     @PostMapping("/api/credits/{id}/close")
-    @PreAuthorize("hasRole('USER')")
     @ResponseBody
     public ResponseEntity<CreditResponse> closeCredit(@PathVariable Long id) {
         Credit closed = creditService.closeCredit(id);
@@ -90,12 +90,9 @@ public class CreditController {
     }
 
     @GetMapping("/api/credits/status/{status}")
-    @PreAuthorize("hasRole('USER')")
     @ResponseBody
-    public ResponseEntity<List<CreditResponse>> getCreditsByStatus(
-            @PathVariable CreditStatus status,
-            @RequestParam Long customerId
-    ) {
+    public ResponseEntity<List<CreditResponse>> getCreditsByStatus(@PathVariable CreditStatus status,
+                                                                   @RequestParam Long customerId) {
         CustomerProfile customer = customerProfileRepository.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + customerId));
 
@@ -107,12 +104,8 @@ public class CreditController {
         return ResponseEntity.ok(responses);
     }
 
-
     @GetMapping("/ui/credits")
-    public String getCreditsPage(
-            Model model,
-            @AuthenticationPrincipal(expression = "username") String username
-    ) {
+    public String getCreditsPage(Model model) {
         List<Credit> credits = creditService.getAllCredits();
         model.addAttribute("credits", credits);
         return "credits";
@@ -124,13 +117,13 @@ public class CreditController {
                                    @RequestParam BigDecimal interestRateAnnual,
                                    @RequestParam int termMonths,
                                    @RequestParam CreditType creditType,
-                                   @RequestParam String phone) {
-        CustomerProfile customer = customerProfileRepository.findByPhone(phone)
-                .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
+                                   @RequestParam Long customerId) {
+        CustomerProfile customer = customerProfileRepository.findById(customerId)
+                .orElseThrow(() -> new IllegalArgumentException("Customer not found: " + customerId));
+
         creditService.createCredit(customer, principalAmount, currency, interestRateAnnual, termMonths, creditType);
         return "redirect:/ui/credits";
     }
-
 
     @Data
     public static class CreateCreditRequest {
@@ -154,7 +147,6 @@ public class CreditController {
         private OffsetDateTime createdAt;
         private OffsetDateTime closedAt;
     }
-
 
     private CreditResponse mapToResponse(Credit credit) {
         CreditResponse response = new CreditResponse();

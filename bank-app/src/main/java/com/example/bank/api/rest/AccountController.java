@@ -21,6 +21,13 @@ public class AccountController {
     private final AccountService accountService;
     private final TransactionService transactionService;
 
+    @GetMapping("/my")
+    public ResponseEntity<List<Account>> getMyAccounts() {
+        Long testCustomerId = 1L;
+        List<Account> accounts = accountService.getCustomerAccounts(testCustomerId);
+        return ResponseEntity.ok(accounts);
+    }
+
     @PostMapping
     public ResponseEntity<Account> createAccount(@RequestBody CreateAccountRequest request) {
         Account created = accountService.createAccount(
