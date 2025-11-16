@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Freedom Bank — Credits</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/assets/css/base.css">
+    <link rel="stylesheet" href="/assets/css/components.css">
+    <style>
+        body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;background:radial-gradient(circle at top left,#0b1a33 0,#020817 55%,#000 100%);color:#e5e9f0}
+        a{color:inherit;text-decoration:none}
+        .app-shell{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh}
+        .sidebar{border-right:1px solid rgba(255,255,255,.06);background:linear-gradient(180deg,rgba(8,15,35,.98),rgba(2,8,15,.98));padding:20px 18px;display:flex;flex-direction:column;gap:22px}
+        .brand{display:flex;align-items:center;gap:10px}
+        .brand__logo{width:32px;height:32px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#22c55e,#16a34a);font-weight:700;font-size:.95rem;color:#020617;box-shadow:0 0 0 0 rgba(34,197,94,.5);animation:pulse 2.4s ease-in-out infinite}
+        .brand__name{font-weight:600;font-size:1rem}
+        .brand__subtitle{font-size:.78rem;opacity:.6}
+        .user-card{padding:12px;border-radius:16px;background:rgba(15,23,42,.85);border:1px solid rgba(148,163,184,.12)}
+        .user-card__status{display:flex;align-items:center;gap:8px;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#22c55e}
+        .nav-title{font-size:.78rem;text-transform:uppercase;letter-spacing:.12em;opacity:.55}
+        .nav-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+        .nav-item{border-radius:12px;display:flex;align-items:center;gap:10px;padding:10px 12px;opacity:.9;transition:transform .12s ease,background .18s ease,opacity .18s ease}
+        .nav-item:hover{transform:translateX(2px);background:rgba(148,163,184,.12);opacity:1}
+        .nav-item--active{background:rgba(34,197,94,.16);color:#bbf7d0;box-shadow:inset 0 0 0 1px rgba(34,197,94,.25)}
+        .nav-caption{margin-left:auto;font-size:.74rem;opacity:.65}
+        .nav-icon{width:18px;height:18px;opacity:.9}
+        .main{padding:22px 28px 32px}
+        .page-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
+        .page-title{font-size:1.35rem;font-weight:600}
+        .page-subtitle{font-size:.92rem;opacity:.72}
+        .card{border-radius:16px;background:radial-gradient(circle at top left,rgba(15,23,42,.95),rgba(5,10,25,.98));border:1px solid rgba(148,163,184,.16);padding:14px}
+        .table{width:100%;border-collapse:collapse;font-size:.85rem}
+        .table th,.table td{padding:10px;border-bottom:1px solid rgba(30,41,59,.9)}
+        .table thead{background:rgba(15,23,42,.9)}
+        .badge{font-size:.72rem;padding:2px 8px;border-radius:999px;border:1px solid transparent}
+        .badge--success{background:rgba(22,163,74,.18);border-color:rgba(34,197,94,.5);color:#bbf7d0}
+        .badge--muted{background:rgba(30,64,175,.14);border-color:rgba(129,140,248,.55);color:#c7d2fe}
+        .footer{margin-top:auto;font-size:.78rem;opacity:.55}
+        @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}50%{box-shadow:0 0 0 10px rgba(34,197,94,.08)}}
+        @media(max-width:960px){.app-shell{grid-template-columns:1fr}.sidebar{flex-direction:row;gap:16px;overflow-x:auto}.footer{display:none}}
+    </style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+    <symbol id="ic-dashboard" viewBox="0 0 24 24"><path fill="currentColor" d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></symbol>
+    <symbol id="ic-accounts" viewBox="0 0 24 24"><path fill="currentColor" d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z"/></symbol>
+    <symbol id="ic-cards" viewBox="0 0 24 24"><path fill="currentColor" d="M2 6h20v12H2zM2 9h20"/></symbol>
+    <symbol id="ic-loans" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2l9 5v10l-9 5-9-5V7z"/></symbol>
+    <symbol id="ic-deposits" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a7 7 0 017 7c0 5-7 13-7 13S5 14 5 9a7 7 0 017-7zm0 9a2 2 0 100-4 2 2 0 000 4z"/></symbol>
+    <symbol id="ic-logout" viewBox="0 0 24 24"><path fill="currentColor" d="M16 13v-2H7V8l-5 4 5 4v-3zM20 3h-8v2h8v14h-8v2h8a2 2 0 002-2V5a2 2 0 00-2-2z"/></symbol>
+</defs></svg>
+
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand__logo">FB</div>
+            <div>
+                <div class="brand__name">Freedom Bank</div>
+                <div class="brand__subtitle">Online banking</div>
+            </div>
+        </div>
+
+        <div class="user-card">
+            <div class="user-card__status"><span>●</span><span>ONLINE</span></div>
+            <div style="font-weight:600;margin-top:6px">admin</div>
+            <div style="opacity:.75">Administrator</div>
+        </div>
+
+        <div>
+            <div class="nav-title">Navigation</div>
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.html" style="display:flex;align-items:center;gap:10px">
+                        <svg class="nav-icon"><use href="#ic-dashboard"/></svg><span>Dashboard</span>
+                    </a>
+                    <span class="nav-caption">overview</span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="accounts.html" style="display:flex;align-items:center;gap:10px">
+                        <svg class="nav-icon"><use href="#ic-accounts"/></svg><span>Accounts</span>
+                    </a>
+                    <span class="nav-caption">balance & details</span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="cards.html" style="display:flex;align-items:center;gap:10px">
+                        <svg class="nav-icon"><use href="#ic-cards"/></svg><span>Cards</span>
+                    </a>
+                    <span class="nav-caption">limits & statements</span>
+                </li>
+                <li class="nav-item nav-item--active">
+                    <a class="nav-link" href="credits.html" style="display:flex;align-items:center;gap:10px">
+                        <svg class="nav-icon"><use href="#ic-loans"/></svg><span>Loans</span>
+                    </a>
+                    <span class="nav-caption">payment schedule</span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="deposits.html" style="display:flex;align-items:center;gap:10px">
+                        <svg class="nav-icon"><use href="#ic-deposits"/></svg><span>Deposits</span>
+                    </a>
+                    <span class="nav-caption">savings</span>
+                </li>
+            </ul>
+        </div>
+
+        <div>
+            <div class="nav-title">Actions</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <a class="btn" href="profile.html">Profile settings</a>
+                <button id="logoutBtn" class="btn" type="button">
+                    <svg class="nav-icon"><use href="#ic-logout"/></svg>
+                    <span>Log out</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="footer">Freedom Bank © 2025</div>
+    </aside>
+
+    <main class="main">
+        <header class="page-header">
+            <div>
+                <div class="page-title">Credits</div>
+                <div class="page-subtitle">Active loan contracts and schedules.</div>
+            </div>
+            <div style="text-align:right;opacity:.8">
+                <div>Client: <strong>admin</strong></div>
+                <div>Status: <span style="color:#4ade80">active</span></div>
+            </div>
+        </header>
+
+        <section class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <div style="font-size:.9rem;opacity:.8">Your credits</div>
+                <button id="refreshBtn" class="btn" type="button">Refresh</button>
+            </div>
+            <table class="table" id="creditsTable">
+                <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>APR</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+    </main>
+</div>
+
+<div id="toastContainer" class="hidden"></div>
+<script type="module" src="/assets/js/pages/creditsPage.js"></script>
+</body>
+</html>

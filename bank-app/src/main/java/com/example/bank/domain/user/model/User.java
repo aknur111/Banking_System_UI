@@ -1,7 +1,9 @@
 package com.example.bank.domain.user.model;
 
+import com.example.bank.domain.customer.model.CustomerProfile;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.util.Set;
 
 @Entity
@@ -11,8 +13,8 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,14 +25,21 @@ public class User {
     @Column(unique = true, length = 255)
     private String password;
 
-    @Column(nullable = false)
+    @Column(unique = true)
+    private String email;
+
+    @Column(name = "enables", nullable = false)
     private boolean enabled = true;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
-            inverseForeignKey = @JoinColumn(name = "role_id")
+            inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
+    private CustomerProfile customer;
 }

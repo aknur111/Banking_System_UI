@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Freedom Bank — Sign in</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <link rel="stylesheet" href="/assets/css/base.css">
+    <link rel="stylesheet" href="/assets/css/components.css">
+</head>
+<body style="display:flex;align-items:center;justify-content:center;min-height:100vh;">
+<div class="card" style="max-width:480px;width:100%;">
+    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;">
+        <div class="sidebar__logo">FB</div>
+        <div>
+            <h1 class="page-title" style="margin:0;">Freedom Bank</h1>
+            <div class="page-subtitle">Internet banking</div>
+        </div>
+    </div>
+
+    <form id="loginForm">
+        <div class="form-group">
+            <label class="label">Username</label>
+            <input class="input" id="loginUsername" autocomplete="username">
+        </div>
+        <div class="form-group">
+            <label class="label">Password</label>
+            <input class="input" id="loginPassword" type="password" autocomplete="current-password">
+        </div>
+        <button class="btn btn--primary" type="submit" style="width:100%;justify-content:center;margin-top:.25rem;">
+            Sign in
+        </button>
+    </form>
+
+    <hr style="border:none;border-top:1px solid var(--border-subtle);margin:1.1rem 0;">
+
+    <form id="registerForm">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="label">Full name</label>
+                <input class="input" id="regFullName" autocomplete="name">
+            </div>
+            <div class="form-group">
+                <label class="label">Phone</label>
+                <input class="input" id="regPhone" autocomplete="tel">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="label">Username</label>
+                <input class="input" id="regUsername" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label class="label">Password</label>
+                <input class="input" id="regPassword" type="password" autocomplete="new-password">
+            </div>
+        </div>
+
+        <button class="btn btn--ghost" type="submit" style="width:100%;justify-content:center;margin-top:.25rem;">
+            Create account
+        </button>
+    </form>
+</div>
+
+<div id="toastContainer" class="hidden"></div>
+<script type="module" src="/assets/js/pages/indexPage.js"></script>
+</body>
+</html>

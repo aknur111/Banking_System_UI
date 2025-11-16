@@ -36,4 +36,10 @@ public class Account {
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
+
+    @PrePersist
+    void prePersist() {
+        if (this.createdAt == null) createdAt = OffsetDateTime.now();
+        if(balance == null) balance = BigDecimal.ZERO;
+    }
 }
